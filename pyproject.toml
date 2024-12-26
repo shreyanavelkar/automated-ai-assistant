@@ -2,12 +2,19 @@
 name = "automated-ai-assistant"
 version = "0.1.0"
 description = ""
-authors = ["shreyanavelkar <shreya.navelkar@gmail.com>"]
+authors = ["shreyanavelkar"]
 readme = "README.md"
 packages = [{include = "automated_ai_assistant", from = "src"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
+autogen-ext = "0.4.0.dev11"
+autogen-core = "0.4.0.dev11"
+autogen-agentchat = "0.4.0.dev11"
+google-api-python-client = "^2.156.0"
+google-auth-httplib2 = "^0.2.0"
+google-auth-oauthlib = "^1.2.1"
+pydantic = "^2.10.4"
 
 
 [build-system]
