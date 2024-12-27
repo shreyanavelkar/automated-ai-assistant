@@ -2,14 +2,14 @@ import logging
 import os
 import os.path
 import pickle
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from google.auth.transport import Request
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
-from automated_ai_assistant.data_types import MeetingDetails
+from automated_ai_assistant.data_types import MeetingDetails, ReminderDetails, EmailDetails
 
 logging.basicConfig(level=logging.INFO)
 
@@ -95,27 +95,28 @@ class GoogleAPIInterface:
         except Exception as e:
             raise Exception(f"Failed to schedule meeting: {str(e)}")
 
-    def set_reminder(self, title, description, reminder_time):
+    def set_reminder(self, reminder_details: ReminderDetails):
         """
         Set a reminder on Google Calendar.
 
         Args:
-            title (str): Reminder title
-            description (str): Reminder description
-            reminder_time (datetime): When to send the reminder
+            reminder_details: Details of the reminder to set
+                title (str): Reminder title
+                description (str): Reminder description
+                reminder_time (datetime): When to send the reminder
 
         Returns:
             dict: Created reminder event
         """
         event = {
-            'summary': title,
-            'description': description,
+            'summary': reminder_details.title,
+            'description': reminder_details.description,
             'start': {
-                'dateTime': reminder_time.isoformat(),
+                'dateTime': reminder_details.reminder_time.isoformat(),
                 'timeZone': 'UTC',
             },
             'end': {
-                'dateTime': (reminder_time + timedelta(minutes=30)).isoformat(),
+                'dateTime': (reminder_details.reminder_time + timedelta(minutes=30)).isoformat(),
                 'timeZone': 'UTC',
             },
             'reminders': {
@@ -135,21 +136,22 @@ class GoogleAPIInterface:
         except Exception as e:
             raise Exception(f"Failed to set reminder: {str(e)}")
 
-    def send_email(self, to, subject, body):
+    def send_email(self, email_details: EmailDetails):
         """
         Send an email using Gmail API.
 
         Args:
-            to (str): Recipient email address
-            subject (str): Email subject
-            body (str): Email body
+            email_details: Details of the email to send
+                to (str): Recipient email address
+                subject (str): Email subject
+                body (str): Email body
         """
         from email.mime.text import MIMEText
         import base64
 
-        message = MIMEText(body)
-        message['to'] = to
-        message['subject'] = subject
+        message = MIMEText(email_details.body)
+        message['to'] = email_details.to
+        message['subject'] = email_details.subject
 
         raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode('utf-8')
         try:
