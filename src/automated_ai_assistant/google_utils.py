@@ -150,15 +150,16 @@ class GoogleAPIInterface:
         import base64
 
         message = MIMEText(email_details.body)
-        message['to'] = email_details.to
+        message['to'] = email_details.recipients[0]
         message['subject'] = email_details.subject
 
         raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode('utf-8')
         try:
-            self.gmail_service.users().messages().send(
+            email = self.gmail_service.users().messages().send(
                 userId='me',
                 body={'raw': raw_message}
             ).execute()
+            return email
         except Exception as e:
             raise Exception(f"Failed to send email: {str(e)}")
 
