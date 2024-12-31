@@ -22,3 +22,4 @@ class EmailDetails(BaseModel):
     subject: str
     body: str
     recipients: List[EmailStr]
+
