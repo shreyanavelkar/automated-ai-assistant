@@ -1,8 +1,9 @@
+import json
 import logging
-from typing import List, ClassVar
+from typing import List
 
-from autogen_agentchat.agents import AssistantAgent
-from autogen_core import type_subscription, Subscription
+from autogen_core import type_subscription, message_handler, MessageContext, RoutedAgent
+from autogen_core.models import UserMessage, LLMMessage, SystemMessage
 from autogen_core.tools import Tool, FunctionTool
 from autogen_ext.models.openai import OpenAIChatCompletionClient
 
@@ -43,15 +44,13 @@ def get_schedule_meeting_tool() -> List[Tool]:
         FunctionTool(
             name="schedule_meeting",
             func=schedule_meeting,
-            description="Schedules meeting with the details provided.",
+            description="Schedules meeting with the details provided."
         )
     ]
 
 
-@type_subscription(topic_type='schedule_meeting')
-class ScheduleMeetingAgent(AssistantAgent):
-
-    internal_unbound_subscriptions_list: ClassVar[List[Subscription]] = []
+@type_subscription(topic_type="schedule_meeting")
+class ScheduleMeetingAgent(RoutedAgent):
 
     def __init__(self):
         self.api_key = load_api_key()
@@ -61,7 +60,7 @@ class ScheduleMeetingAgent(AssistantAgent):
         )
         self.google_api = GoogleAPIInterface()
 
-        system_message = """You are a meeting scheduling assistant. Your task is to:
+        self.system_message = """You are a meeting scheduling assistant. Your task is to:
         1. Parse meeting requests to extract: time, duration, attendees, and purpose
         2. Use the schedule_meeting tool to create the meeting
         3. Respond in a friendly, concise manner
@@ -71,11 +70,22 @@ class ScheduleMeetingAgent(AssistantAgent):
         - Create clear meeting summaries
         - Format the meeting details correctly for the tool
         """
-
         super().__init__(
-            name='ScheduleMeetingAgent',
-            model_client=self.model_client,
-            system_message=system_message,
-            description='Specialized agent for scheduling meetings',
-            tools=[schedule_meeting]
+            description='Specialized agent for scheduling meetings'
         )
+
+    @message_handler
+    async def handle_message(self, message: UserMessage, ctx: MessageContext) -> str:
+        try:
+            session: List[LLMMessage] = [message, SystemMessage(content=self.system_message, type="SystemMessage")]
+            response = await self.model_client.create(messages=session,
+                                                      tools=get_schedule_meeting_tool())
+            if response.finish_reason == 'function_calls':
+                function_call = response.content[0]
+                raw_args = json.loads(function_call.arguments)
+                meeting_details = MeetingDetails(**raw_args['meeting_details'])
+                result = schedule_meeting(meeting_details)
+                return result
+        except Exception as e:
+            logging.error(f"Error handling message: {str(e)}")
+            return "Failed to schedule the meeting."

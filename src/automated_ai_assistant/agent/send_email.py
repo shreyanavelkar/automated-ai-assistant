@@ -1,7 +1,9 @@
-from typing import List, ClassVar
+import json
+import logging
+from typing import List
 
-from autogen_agentchat.agents import AssistantAgent
-from autogen_core import type_subscription, Subscription
+from autogen_core import type_subscription, RoutedAgent, message_handler, MessageContext
+from autogen_core.models import UserMessage, LLMMessage, SystemMessage
 from autogen_core.tools import Tool, FunctionTool
 from autogen_ext.models import OpenAIChatCompletionClient
 
@@ -37,9 +39,7 @@ def get_send_email_tool() -> List[Tool]:
 
 
 @type_subscription(topic_type='send_email')
-class SendEmailAgent(AssistantAgent):
-
-    internal_unbound_subscriptions_list: ClassVar[List[Subscription]] = []
+class SendEmailAgent(RoutedAgent):
 
     def __init__(self):
         self.api_key = load_api_key()
@@ -57,9 +57,21 @@ class SendEmailAgent(AssistantAgent):
             - Format the email details correctly for the tool
         """
         super().__init__(
-            name='SendEmailAgent',
-            model_client=self.model_client,
-            system_message=self.system_message,
-            description='Specialized agent for sending emails',
-            tools=[send_email]
+            description='Specialized agent for sending emails'
         )
+
+    @message_handler
+    async def handle_message(self, message: UserMessage, ctx: MessageContext) -> str:
+        try:
+            session: List[LLMMessage] = [message, SystemMessage(content=self.system_message, type="SystemMessage")]
+            response = await self.model_client.create(messages=session,
+                                                      tools=get_send_email_tool())
+            if response.finish_reason == 'function_calls':
+                function_call = response.content[0]
+                raw_args = json.loads(function_call.arguments)
+                email_details = EmailDetails(**raw_args['email_details'])
+                result = send_email(email_details)
+                return result
+        except Exception as e:
+            logging.error(f"Error handling message: {str(e)}")
+            return "Failed to schedule the meeting."

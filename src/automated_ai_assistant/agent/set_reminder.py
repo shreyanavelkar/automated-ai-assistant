@@ -1,7 +1,9 @@
+import json
+import logging
 from typing import List, ClassVar
 
-from autogen_agentchat.agents import AssistantAgent
-from autogen_core import type_subscription, Subscription
+from autogen_core import Subscription, type_subscription, RoutedAgent, message_handler, MessageContext
+from autogen_core.models import UserMessage, LLMMessage, SystemMessage
 from autogen_core.tools import Tool, FunctionTool
 from autogen_ext.models import OpenAIChatCompletionClient
 
@@ -44,9 +46,8 @@ def get_set_reminder_tool() -> List[Tool]:
     ]
 
 
-@type_subscription(topic_type='set_reminder')
-class SetReminderAgent(AssistantAgent):
-
+@type_subscription(topic_type="set_reminder")
+class SetReminderAgent(RoutedAgent):
     internal_unbound_subscriptions_list: ClassVar[List[Subscription]] = []
 
     def __init__(self):
@@ -66,9 +67,21 @@ class SetReminderAgent(AssistantAgent):
             - Format the reminder details correctly for the tool
         """
         super().__init__(
-            name='SetReminderAgent',
-            model_client=self.model_client,
-            system_message=self.system_message,
-            description='Specialized agent for setting reminders',
-            tools=[set_reminder]
+            description='Specialized agent for setting reminders'
         )
+
+    @message_handler
+    async def handle_message(self, message: UserMessage, ctx: MessageContext) -> str:
+        try:
+            session: List[LLMMessage] = [message, SystemMessage(content=self.system_message, type="SystemMessage")]
+            response = await self.model_client.create(messages=session,
+                                                      tools=get_set_reminder_tool())
+            if response.finish_reason == 'function_calls':
+                function_call = response.content[0]
+                raw_args = json.loads(function_call.arguments)
+                reminder_details = ReminderDetails(**raw_args['reminder_details'])
+                result = set_reminder(reminder_details)
+                return result
+        except Exception as e:
+            logging.error(f"Error handling message: {str(e)}")
+            return "Failed to schedule the meeting."
