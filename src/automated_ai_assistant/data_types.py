@@ -4,6 +4,14 @@ from typing import List
 from pydantic import BaseModel, EmailStr
 
 
+class EndUserMessage(BaseModel):
+    content: str
+
+
+class Intent(BaseModel):
+    intent: str
+
+
 class MeetingDetails(BaseModel):
     start_time: datetime
     end_time: datetime
@@ -22,4 +30,3 @@ class EmailDetails(BaseModel):
     subject: str
     body: str
     recipients: List[EmailStr]
-
