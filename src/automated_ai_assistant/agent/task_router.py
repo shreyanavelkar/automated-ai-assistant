@@ -4,14 +4,14 @@ import json
 from autogen_core import RoutedAgent, MessageContext, default_subscription, SingleThreadedAgentRuntime, \
     AgentType, DefaultTopicId, DefaultSubscription, message_handler
 from autogen_core.models import UserMessage, SystemMessage
-from autogen_ext.models import OpenAIChatCompletionClient
+from autogen_ext.models.openai import OpenAIChatCompletionClient
 
 from automated_ai_assistant.agent.schedule_meeting import ScheduleMeetingAgent
 from automated_ai_assistant.agent.send_email import SendEmailAgent
 from automated_ai_assistant.agent.set_reminder import SetReminderAgent
 from automated_ai_assistant.agent.utils import load_api_key
-from automated_ai_assistant.data_types import EndUserMessage
-from automated_ai_assistant.registry import AgentRegistry
+from automated_ai_assistant.model.data_types import EndUserMessage
+from automated_ai_assistant.utils.registry_utils import AgentRegistry
 
 
 @default_subscription
@@ -87,6 +87,11 @@ class TaskRoutingAgent(RoutedAgent):
 
 
 async def test_router():
+    self.model_client = OpenAIChatCompletionClient(
+        model='gpt-3.5-turbo',
+        api_key=self.api_key
+    )
+
     agent_runtime = SingleThreadedAgentRuntime()
     agent_type = AgentType("task_router")
     schedule_meeting_type = AgentType("schedule_meeting")

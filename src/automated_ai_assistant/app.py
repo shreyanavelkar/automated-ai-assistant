@@ -6,7 +6,7 @@ from automated_ai_assistant.agent.schedule_meeting import ScheduleMeetingAgent
 from automated_ai_assistant.agent.send_email import SendEmailAgent
 from automated_ai_assistant.agent.set_reminder import SetReminderAgent
 from automated_ai_assistant.agent.task_router import TaskRoutingAgent
-from automated_ai_assistant.data_types import EndUserMessage
+from automated_ai_assistant.model.data_types import EndUserMessage
 
 
 async def initialize_agent_runtime() -> SingleThreadedAgentRuntime:
@@ -51,7 +51,6 @@ async def initialize_agent_runtime() -> SingleThreadedAgentRuntime:
     print("Agent runtime initialized successfully.")
 
     return agent_runtime
-
 
 async def main():
     runtime = await initialize_agent_runtime()

@@ -7,11 +7,8 @@ from autogen_core.models import UserMessage, LLMMessage, SystemMessage
 from autogen_core.tools import Tool, FunctionTool
 from autogen_ext.models.openai import OpenAIChatCompletionClient
 
-from automated_ai_assistant.agent.utils import load_api_key
-from automated_ai_assistant.data_types import MeetingDetails
-from automated_ai_assistant.google_utils import GoogleAPIInterface
-
-google_api = GoogleAPIInterface()
+from automated_ai_assistant.model.data_types import MeetingDetails
+from automated_ai_assistant.utils.google_utils import google_api_interface
 
 
 def schedule_meeting(meeting_details: MeetingDetails) -> str:
@@ -31,7 +28,7 @@ def schedule_meeting(meeting_details: MeetingDetails) -> str:
     """
     try:
         logging.info(f"Scheduling meeting: {meeting_details}")
-        event = google_api.schedule_meeting(
+        event = google_api_interface().schedule_meeting(
             meeting_details=meeting_details
         )
         return f"Meeting scheduled successfully: {event.get('htmlLink')}"
@@ -52,14 +49,8 @@ def get_schedule_meeting_tool() -> List[Tool]:
 @type_subscription(topic_type="schedule_meeting")
 class ScheduleMeetingAgent(RoutedAgent):
 
-    def __init__(self):
-        self.api_key = load_api_key()
-        self.model_client = OpenAIChatCompletionClient(
-            model='gpt-3.5-turbo',
-            api_key=self.api_key
-        )
-        self.google_api = GoogleAPIInterface()
-
+    def __init__(self, model_client: OpenAIChatCompletionClient):
+        self.model_client = model_client
         self.system_message = """You are a meeting scheduling assistant. Your task is to:
         1. Parse meeting requests to extract: time, duration, attendees, and purpose
         2. Use the schedule_meeting tool to create the meeting
