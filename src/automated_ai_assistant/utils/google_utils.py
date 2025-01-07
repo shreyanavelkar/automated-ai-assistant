@@ -9,7 +9,7 @@ from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
-from automated_ai_assistant.data_types import MeetingDetails, ReminderDetails, EmailDetails
+from automated_ai_assistant.model.data_types import MeetingDetails, ReminderDetails, EmailDetails
 
 logging.basicConfig(level=logging.INFO)
 
@@ -162,6 +162,10 @@ class GoogleAPIInterface:
             return email
         except Exception as e:
             raise Exception(f"Failed to send email: {str(e)}")
+
+
+def google_api_interface():
+    return GoogleAPIInterface()
 
 
 if __name__ == '__main__':

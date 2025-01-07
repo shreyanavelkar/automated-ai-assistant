@@ -8,8 +8,8 @@ from autogen_core.tools import Tool, FunctionTool
 from autogen_ext.models import OpenAIChatCompletionClient
 
 from automated_ai_assistant.agent.utils import load_api_key
-from automated_ai_assistant.data_types import EmailDetails
-from automated_ai_assistant.google_utils import GoogleAPIInterface
+from automated_ai_assistant.model.data_types import EmailDetails
+from automated_ai_assistant.utils.google_utils import GoogleAPIInterface
 
 google_api = GoogleAPIInterface()
 
