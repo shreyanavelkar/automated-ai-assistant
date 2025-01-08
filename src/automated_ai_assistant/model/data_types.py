@@ -1,4 +1,5 @@
 from datetime import datetime
+from enum import Enum
 from typing import List
 
 from pydantic import BaseModel, EmailStr
@@ -30,3 +31,9 @@ class EmailDetails(BaseModel):
     subject: str
     body: str
     recipients: List[EmailStr]
+
+
+class AgentEnum(str, Enum):
+    SCHEDULE_MEETING = "schedule_meeting"
+    SET_REMINDER = "set_reminder"
+    SEND_EMAIL = "send_email"

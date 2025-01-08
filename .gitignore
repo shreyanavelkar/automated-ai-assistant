@@ -1,8 +1,10 @@
 credentials.json
 .idea
-src/automated_ai_assistant/agent/openai.yml
+src/automated_ai_assistant/utils/openai.yml
 token.pickle
 .DS_Store
 src/automated_ai_assistant/__pycache__
 src/automated_ai_assistant/agent/__pycache__
 dist/
+src/automated_ai_assistant/model/__pycache__/
+src/automated_ai_assistant/utils/__pycache__/

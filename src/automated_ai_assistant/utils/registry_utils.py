@@ -48,18 +48,3 @@ class AgentRegistry:
                 })
 
         return tools
-
-    async def get_agent(self, type: str) -> Optional[dict]:
-        return self.agents.get(type)
-
-    def get_agent_tool(self, type: str) -> Optional[dict]:
-        all_tools = self.retrieve_all_agent_tools()
-        for tool in all_tools:
-            if tool['agent'] == type:
-                return tool
-        return None
-
-
-if __name__ == "__main__":
-    registry = AgentRegistry()
-    tools = registry.get_agent_tool("schedule_meeting")
