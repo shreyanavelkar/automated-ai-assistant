@@ -2,13 +2,21 @@ import asyncio
 
 from autogen_core import DefaultTopicId
 from autogen_ext.models.openai import OpenAIChatCompletionClient
+from fastapi import FastAPI
 
 from automated_ai_assistant.agent.utils import load_api_key
 from automated_ai_assistant.model.data_types import EndUserMessage
 from automated_ai_assistant.utils.runtime_utils import initialize_agent_runtime
 
+app = FastAPI()
 
-async def main():
+
+@app.get("/")
+def check_health():
+    return "Alive"
+
+
+async def process():
     api_key = load_api_key()
     model_client = OpenAIChatCompletionClient(
         api_key=api_key,
@@ -37,5 +45,3 @@ async def main():
     await runtime.stop()
 
 
-if __name__ == "__main__":
-    asyncio.run(main())

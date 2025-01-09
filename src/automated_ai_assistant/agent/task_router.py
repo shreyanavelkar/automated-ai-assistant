@@ -85,30 +85,3 @@ class TaskRoutingAgent(RoutedAgent):
 
         return "Sorry, I couldn't determine which agent should handle this task."
 
-
-async def test_router():
-    self.model_client = OpenAIChatCompletionClient(
-        model='gpt-3.5-turbo',
-        api_key=self.api_key
-    )
-
-
-    # router = await agent_runtime.get(AgentType("task_router"))
-    test_messages = []
-
-    for msg in test_messages:
-        print(f"\nTesting message: {msg}")
-        try:
-            response = await agent_runtime.publish_message(
-                EndUserMessage(content=msg),
-                DefaultTopicId(type="task_router")
-            )
-            print(f"Response: {response}")
-        except Exception as e:
-            print(f"Error: {str(e)}")
-
-    await agent_runtime.stop_when_idle()
-
-
-if __name__ == "__main__":
-    asyncio.run(test_router())
