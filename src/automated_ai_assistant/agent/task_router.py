@@ -11,6 +11,7 @@ from automated_ai_assistant.agent.send_email import SendEmailAgent
 from automated_ai_assistant.agent.set_reminder import SetReminderAgent
 from automated_ai_assistant.agent.utils import load_api_key
 from automated_ai_assistant.model.data_types import EndUserMessage
+from automated_ai_assistant.oltp_tracing import logger
 from automated_ai_assistant.utils.registry_utils import AgentRegistry
 
 
@@ -48,7 +49,7 @@ class TaskRoutingAgent(RoutedAgent):
         Returns:
             str: Response from the specialized agent
         """
-        print(f"Routing task: {message.content}")
+        logger.info(f"Routing task: {message.content}")
         user_message = UserMessage(
             content=message.content,
             source=ctx.topic_id.type,
@@ -75,6 +76,7 @@ class TaskRoutingAgent(RoutedAgent):
         }]
         intent = await self.model_client.create(messages=[user_message, system_message],
                                                 tools=tools)
+        logger.info(f"Extracted intent: {intent}")
         if intent.content[0]:
             agent_type = json.loads(intent.content[0].arguments)["agent_type"]
             await self.runtime.publish_message(
