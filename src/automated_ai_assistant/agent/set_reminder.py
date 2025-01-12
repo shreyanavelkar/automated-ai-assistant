@@ -1,5 +1,4 @@
 import json
-import logging
 from typing import List, ClassVar
 
 from autogen_core import Subscription, type_subscription, RoutedAgent, message_handler, MessageContext
@@ -9,6 +8,7 @@ from autogen_ext.models import OpenAIChatCompletionClient
 
 from automated_ai_assistant.agent.utils import load_api_key
 from automated_ai_assistant.model.data_types import ReminderDetails
+from automated_ai_assistant.oltp_tracing import logger
 from automated_ai_assistant.utils.google_utils import GoogleAPIInterface
 
 google_api = GoogleAPIInterface()
@@ -28,6 +28,7 @@ def set_reminder(reminder_details: ReminderDetails) -> str:
         str: Confirmation message with reminder link
     """
     try:
+        logger.info(f"Setting reminder: {reminder_details}")
         reminder = google_api.set_reminder(
             reminder_details=reminder_details
         )
@@ -48,14 +49,9 @@ def get_set_reminder_tool() -> List[Tool]:
 
 @type_subscription(topic_type="set_reminder")
 class SetReminderAgent(RoutedAgent):
-    internal_unbound_subscriptions_list: ClassVar[List[Subscription]] = []
 
-    def __init__(self):
-        self.api_key = load_api_key()
-        self.model_client = OpenAIChatCompletionClient(
-            model='gpt-3.5-turbo',
-            api_key=self.api_key
-        )
+    def __init__(self, model_client: OpenAIChatCompletionClient):
+        self.model_client = model_client
         self.system_message = """You are a reminder setting assistant. Your task is to:
             1. Parse reminder requests to extract: title, description, and time
             2. Use the set_reminder tool to create the reminder
@@ -73,9 +69,11 @@ class SetReminderAgent(RoutedAgent):
     @message_handler
     async def handle_message(self, message: UserMessage, ctx: MessageContext) -> str:
         try:
+            logger.info(f"Received message: {message.content}")
             session: List[LLMMessage] = [message, SystemMessage(content=self.system_message, type="SystemMessage")]
             response = await self.model_client.create(messages=session,
                                                       tools=get_set_reminder_tool())
+            logger.info(f"Received response: {response}")
             if response.finish_reason == 'function_calls':
                 function_call = response.content[0]
                 raw_args = json.loads(function_call.arguments)
@@ -83,5 +81,5 @@ class SetReminderAgent(RoutedAgent):
                 result = set_reminder(reminder_details)
                 return result
         except Exception as e:
-            logging.error(f"Error handling message: {str(e)}")
+            logger.error(f"Error handling message: {str(e)}")
             return "Failed to schedule the meeting."

@@ -2,6 +2,7 @@ import asyncio
 
 from autogen_core import DefaultTopicId
 from autogen_ext.models.openai import OpenAIChatCompletionClient
+from automated_ai_assistant.oltp_tracing import logger
 from fastapi import FastAPI
 
 from automated_ai_assistant.agent.utils import load_api_key
@@ -26,22 +27,21 @@ async def process():
     runtime = await initialize_agent_runtime(model_client=model_client)
 
     test_messages = [
-        # "I need to schedule a meeting with my boss",
-        # "I need to set a reminder for tomorrow",
-        # "I need to send an email to my boss"
     ]
 
     for msg in test_messages:
-        print(f"\nProcessing request: {msg}")
+        logger.info(f"\nProcessing request: {msg}")
         try:
             result = await runtime.publish_message(
                 message=EndUserMessage(content=msg),
                 topic_id=DefaultTopicId(type="task_router")
             )
-            print(f"Result: {result}")
+            logger.info(f"Result: {result}")
         except Exception as e:
             print(f"Error: {str(e)}")
 
-    await runtime.stop()
+    await runtime.stop_when_idle()
 
 
+if __name__ == "__main__":
+    asyncio.run(process())

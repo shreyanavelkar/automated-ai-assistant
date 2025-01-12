@@ -1,5 +1,4 @@
 import json
-import logging
 from typing import List
 
 from autogen_core import type_subscription, message_handler, MessageContext, RoutedAgent
@@ -8,6 +7,7 @@ from autogen_core.tools import Tool, FunctionTool
 from autogen_ext.models.openai import OpenAIChatCompletionClient
 
 from automated_ai_assistant.model.data_types import MeetingDetails
+from automated_ai_assistant.oltp_tracing import logger
 from automated_ai_assistant.utils.google_utils import google_api_interface
 
 
@@ -27,7 +27,7 @@ def schedule_meeting(meeting_details: MeetingDetails) -> str:
         str: Confirmation message with meeting link
     """
     try:
-        logging.info(f"Scheduling meeting: {meeting_details}")
+        logger.info(f"Scheduling meeting: {meeting_details}")
         event = google_api_interface().schedule_meeting(
             meeting_details=meeting_details
         )
@@ -68,9 +68,11 @@ class ScheduleMeetingAgent(RoutedAgent):
     @message_handler
     async def handle_message(self, message: UserMessage, ctx: MessageContext) -> str:
         try:
+            logger.info(f"Received message: {message.content}")
             session: List[LLMMessage] = [message, SystemMessage(content=self.system_message, type="SystemMessage")]
             response = await self.model_client.create(messages=session,
                                                       tools=get_schedule_meeting_tool())
+            logger.info(f"Received response: {response}")
             if response.finish_reason == 'function_calls':
                 function_call = response.content[0]
                 raw_args = json.loads(function_call.arguments)
@@ -78,5 +80,5 @@ class ScheduleMeetingAgent(RoutedAgent):
                 result = schedule_meeting(meeting_details)
                 return result
         except Exception as e:
-            logging.error(f"Error handling message: {str(e)}")
+            logger.error(f"Error handling message: {str(e)}")
             return "Failed to schedule the meeting."
