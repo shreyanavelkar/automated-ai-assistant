@@ -8,3 +8,4 @@ src/automated_ai_assistant/agent/__pycache__
 dist/
 src/automated_ai_assistant/model/__pycache__/
 src/automated_ai_assistant/utils/__pycache__/
+.qodo

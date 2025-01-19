@@ -1,13 +1,11 @@
 import json
-from typing import List, ClassVar
+from typing import List
 
-from autogen_core import Subscription, type_subscription, RoutedAgent, message_handler, MessageContext
+from autogen_core import type_subscription, RoutedAgent, message_handler, MessageContext
 from autogen_core.models import UserMessage, LLMMessage, SystemMessage
 from autogen_core.tools import Tool, FunctionTool
 from autogen_ext.models import OpenAIChatCompletionClient
-
-from automated_ai_assistant.agent.utils import load_api_key
-from automated_ai_assistant.model.data_types import ReminderDetails
+from automated_ai_assistant.model.data_types import ReminderDetails, EndUserMessage
 from automated_ai_assistant.oltp_tracing import logger
 from automated_ai_assistant.utils.google_utils import GoogleAPIInterface
 
@@ -67,10 +65,11 @@ class SetReminderAgent(RoutedAgent):
         )
 
     @message_handler
-    async def handle_message(self, message: UserMessage, ctx: MessageContext) -> str:
+    async def handle_message(self, message: EndUserMessage, ctx: MessageContext) -> str:
         try:
-            logger.info(f"Received message: {message.content}")
-            session: List[LLMMessage] = [message, SystemMessage(content=self.system_message, type="SystemMessage")]
+            logger.info(f"Received message: {message.content} from source: {message.source}")
+            session: List[LLMMessage] = [UserMessage(content=message.content, type="UserMessage"),
+                                         SystemMessage(content=self.system_message, type="SystemMessage")]
             response = await self.model_client.create(messages=session,
                                                       tools=get_set_reminder_tool())
             logger.info(f"Received response: {response}")

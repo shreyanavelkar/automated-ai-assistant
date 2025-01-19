@@ -1,14 +1,9 @@
-import asyncio
 import json
 
-from autogen_core import RoutedAgent, MessageContext, default_subscription, SingleThreadedAgentRuntime, \
-    AgentType, DefaultTopicId, DefaultSubscription, message_handler
+from autogen_core import RoutedAgent, MessageContext, default_subscription, DefaultTopicId, message_handler
 from autogen_core.models import UserMessage, SystemMessage
 from autogen_ext.models.openai import OpenAIChatCompletionClient
 
-from automated_ai_assistant.agent.schedule_meeting import ScheduleMeetingAgent
-from automated_ai_assistant.agent.send_email import SendEmailAgent
-from automated_ai_assistant.agent.set_reminder import SetReminderAgent
 from automated_ai_assistant.agent.utils import load_api_key
 from automated_ai_assistant.model.data_types import EndUserMessage
 from automated_ai_assistant.oltp_tracing import logger
@@ -49,7 +44,7 @@ class TaskRoutingAgent(RoutedAgent):
         Returns:
             str: Response from the specialized agent
         """
-        logger.info(f"Routing task: {message.content}")
+        logger.info(f"Routing task: {message.content} from source: {message.source}")
         user_message = UserMessage(
             content=message.content,
             source=ctx.topic_id.type,
@@ -86,4 +81,3 @@ class TaskRoutingAgent(RoutedAgent):
             return f"Routed to {agent_type} agent"
 
         return "Sorry, I couldn't determine which agent should handle this task."
-

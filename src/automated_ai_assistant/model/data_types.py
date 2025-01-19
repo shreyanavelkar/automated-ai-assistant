@@ -7,6 +7,7 @@ from pydantic import BaseModel, EmailStr
 
 class EndUserMessage(BaseModel):
     content: str
+    source: str
 
 
 class Intent(BaseModel):

@@ -24,7 +24,7 @@ def simple_logger():
 
 
 def configure_logger():
-    logger = logging.getLogger("travel_chatbot")
+    logger = logging.getLogger("personal_assistant")
     logger.setLevel(logging.INFO)
 
     if not logger.hasHandlers():
