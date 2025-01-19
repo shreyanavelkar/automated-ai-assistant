@@ -5,11 +5,9 @@ from autogen_core import type_subscription, RoutedAgent, message_handler, Messag
 from autogen_core.models import UserMessage, LLMMessage, SystemMessage
 from autogen_core.tools import Tool, FunctionTool
 from autogen_ext.models import OpenAIChatCompletionClient
-from automated_ai_assistant.model.data_types import EmailDetails
+from automated_ai_assistant.model.data_types import EmailDetails, EndUserMessage
 from automated_ai_assistant.oltp_tracing import logger
-from automated_ai_assistant.utils.google_utils import GoogleAPIInterface
-
-google_api = GoogleAPIInterface()
+from automated_ai_assistant.utils.google_utils import google_api_interface
 
 
 def send_email(email_details: EmailDetails) -> str:
@@ -19,7 +17,7 @@ def send_email(email_details: EmailDetails) -> str:
     """
     try:
         logger.info(f"Sending email: {email_details}")
-        email = google_api.send_email(
+        email = google_api_interface().send_email(
             email_details=email_details
         )
         return f"Email sent successfully: {email.get('id')}"
@@ -56,10 +54,11 @@ class SendEmailAgent(RoutedAgent):
         )
 
     @message_handler
-    async def handle_message(self, message: UserMessage, ctx: MessageContext) -> str:
+    async def handle_message(self, message: EndUserMessage, ctx: MessageContext) -> str:
         try:
-            logger.info(f"Received message: {message.content}")
-            session: List[LLMMessage] = [message, SystemMessage(content=self.system_message, type="SystemMessage")]
+            logger.info(f"Received message: {message.content} from source: {message.source}")
+            session: List[LLMMessage] = [UserMessage(content=message.content, type="UserMessage"),
+                                         SystemMessage(content=self.system_message, type="SystemMessage")]
             response = await self.model_client.create(messages=session,
                                                       tools=get_send_email_tool())
             logger.info(f"Received response: {response}")
