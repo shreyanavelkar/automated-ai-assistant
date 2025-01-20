@@ -5,6 +5,11 @@ from typing import List
 from pydantic import BaseModel, EmailStr
 
 
+class SessionData(BaseModel):
+    username: str
+
+
+
 class EndUserMessage(BaseModel):
     content: str
     source: str

@@ -5,11 +5,10 @@ from autogen_core import type_subscription, RoutedAgent, message_handler, Messag
 from autogen_core.models import UserMessage, LLMMessage, SystemMessage
 from autogen_core.tools import Tool, FunctionTool
 from autogen_ext.models import OpenAIChatCompletionClient
+
 from automated_ai_assistant.model.data_types import ReminderDetails, EndUserMessage
 from automated_ai_assistant.oltp_tracing import logger
-from automated_ai_assistant.utils.google_utils import GoogleAPIInterface
-
-google_api = GoogleAPIInterface()
+from automated_ai_assistant.utils.google_utils import google_api_interface
 
 
 def set_reminder(reminder_details: ReminderDetails) -> str:
@@ -27,7 +26,7 @@ def set_reminder(reminder_details: ReminderDetails) -> str:
     """
     try:
         logger.info(f"Setting reminder: {reminder_details}")
-        reminder = google_api.set_reminder(
+        reminder = google_api_interface().set_reminder(
             reminder_details=reminder_details
         )
         return f"Reminder set successfully: {reminder.get('htmlLink')}"
