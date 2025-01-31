@@ -1,5 +1,6 @@
 from autogen_core import SingleThreadedAgentRuntime, AgentType, DefaultSubscription
 
+from automated_ai_assistant.agent.chat_agent import ChatAgent
 from automated_ai_assistant.agent.schedule_meeting import ScheduleMeetingAgent
 from automated_ai_assistant.agent.send_email import SendEmailAgent
 from automated_ai_assistant.agent.set_reminder import SetReminderAgent
@@ -24,6 +25,7 @@ async def initialize_agent_runtime(model_client) -> SingleThreadedAgentRuntime:
     schedule_meeting_type = AgentType("schedule_meeting")
     set_reminder_type = AgentType("set_reminder")
     send_email_type = AgentType("send_email")
+    chat_agent_type = AgentType("chat_agent")
 
     await agent_runtime.register_factory(type=agent_type,
                                          agent_factory=lambda: TaskRoutingAgent(),
@@ -41,14 +43,12 @@ async def initialize_agent_runtime(model_client) -> SingleThreadedAgentRuntime:
                                          agent_factory=lambda: SendEmailAgent(model_client=model_client),
                                          expected_class=SendEmailAgent)
 
-    await agent_runtime.add_subscription(
-        DefaultSubscription(
-            topic_type="task_router",
-            agent_type="task_router"
-        )
-    )
+    await agent_runtime.register_factory(type=chat_agent_type,
+                                         agent_factory=lambda: ChatAgent(model_client=model_client),
+                                         expected_class=ChatAgent)
 
-    for agent_type in ["schedule_meeting", "send_email", "set_reminder"]:
+
+    for agent_type in ["chat_agent", "task_router", "schedule_meeting", "send_email", "set_reminder"]:
         await agent_runtime.add_subscription(
             DefaultSubscription(
                 topic_type=agent_type,

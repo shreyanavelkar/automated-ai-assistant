@@ -1,6 +1,7 @@
 import json
 
-from autogen_core import RoutedAgent, MessageContext, default_subscription, DefaultTopicId, message_handler
+from autogen_core import RoutedAgent, MessageContext, DefaultTopicId, message_handler, \
+    type_subscription
 from autogen_core.models import UserMessage, SystemMessage
 from autogen_ext.models.openai import OpenAIChatCompletionClient
 
@@ -10,7 +11,7 @@ from automated_ai_assistant.oltp_tracing import logger
 from automated_ai_assistant.utils.registry_utils import AgentRegistry
 
 
-@default_subscription
+@type_subscription(topic_type="task_router")
 class TaskRoutingAgent(RoutedAgent):
     def __init__(self):
         self.registry = AgentRegistry()
@@ -75,7 +76,7 @@ class TaskRoutingAgent(RoutedAgent):
         if intent.content[0]:
             agent_type = json.loads(intent.content[0].arguments)["agent_type"]
             await self.runtime.publish_message(
-                user_message,
+                message,
                 DefaultTopicId(type=agent_type)
             )
             return f"Routed to {agent_type} agent"

@@ -5,14 +5,18 @@ from typing import List
 from pydantic import BaseModel, EmailStr
 
 
-class SessionData(BaseModel):
-    username: str
-
+class ChatRequest(BaseModel):
+    message: str
 
 
 class EndUserMessage(BaseModel):
     content: str
     source: str
+
+
+class SessionData(BaseModel):
+    username: str
+    messages: List[EndUserMessage]
 
 
 class Intent(BaseModel):
